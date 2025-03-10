@@ -14,7 +14,8 @@ import { useEffect } from "react";
 import Dashboard from "./Components 2/Dashboard";
 import AuthForm from "./Components/AuthForm";
 import AddVillas from "./Components 2/AddVillas";
-
+import PaymentSuccess from "./Components 2/PaymentSuccess";
+import PaymentFailure from "./Components 2/PaymentFailure";
 
 function App() {
   useEffect(() => {
@@ -43,6 +44,8 @@ function App() {
         <Route path='/dashboard' element={<Dashboard />} />
         <Route path='/authform' element={<AuthForm />} />
         <Route path='/addvillas' element={<AddVillas />} />
+        <Route path='/payment-success' element={<PaymentSuccess />} />
+        <Route path='/payment-failure' element={<PaymentFailure />} />
     
      
 

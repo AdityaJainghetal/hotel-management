@@ -21,6 +21,7 @@ const villaRouter = require("./src/routes/villaRoutes.js");
 const  bookingRoutes = require("./src/routes/BookingRoutes.js");
 
 
+
 app.use("/uploads", express.static("uploads"));
 
 app.use('/v1/admin', adminRouter);

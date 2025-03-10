@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchData } from "../Redux/Slice";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { IoPeopleSharp } from "react-icons/io5";
 import { FaBed } from "react-icons/fa6";
@@ -18,12 +18,12 @@ import topvilla_image2 from "../images/topvilla_image2.png";
 import topvilla_image3 from "../images/topvilla_image3.png";
 
 function AllVillah() {
-  let navigate = useNavigate()
+  const { id } = useParams();
+  const navigate = useNavigate()
   const [filtersVisible, setFiltersVisible] = useState(false);
 
   const dispatch = useDispatch();
   const { data, loading, error } = useSelector((state) => state.data);
-  console.log(data);
 
   useEffect(() => {
     dispatch(fetchData());
@@ -187,7 +187,6 @@ function AllVillah() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {data.slice(13, 19).map((items, index) => {
                 return (
-                
                   <div
                     className="bg-white rounded-lg shadow-md overflow-hidden"
                     onClick={() => carddata(items.id)}
@@ -197,14 +196,13 @@ function AllVillah() {
                       style={{ borderBottomRightRadius: "50px" }}
                       src={items.images}
                       alt="Card Image 1"
-                      className="w-full h-auto object-cover"
+                      className="w-full h-[400px] object-cover"
                     />
                     </Link>
                     <div className="p-4">
                       <h3 className="text-3xl font-semibold">Villa Makarska</h3>
                       <p className="mt-2 text-gray-600 pb-3 pt-2">
-                        A beautiful villa with modern amenities and a great
-                        view.
+                        A beautiful villa with modern amenities and a great view.
                       </p>
                       <div className="flex mt-3 ">
                         <span className="w-8 h-8  rounded-full flex justify-center items-center">

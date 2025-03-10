@@ -1,5 +1,6 @@
 const VillaModel = require("../model/villaModel");
 const Helper = require("../utils/helper");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const createVilla = async (req, res) => {
   try {
@@ -16,70 +17,94 @@ const createVilla = async (req, res) => {
       checkOutTime
     } = req.body;
 
-    // Required field validations
-    if (!name) {
-      return Helper.fail(res, "Name is required!");
-    }
-    if (!location) {
-      return Helper.fail(res, "Location is required!");
-    }
-    if (!price) {
-      return Helper.fail(res, "Price is required!");
-    }
-    if (!size) {
-      return Helper.fail(res, "Size is required!");
-    }
-    if (!guests) {
-      return Helper.fail(res, "Number of guests is required!");
-    }
-    if (!bedrooms) {
-      return Helper.fail(res, "Number of bedrooms is required!");
-    }
-    if (!bathrooms) {
-      return Helper.fail(res, "Number of bathrooms is required!");
-    }
-    if (!squareMeters) {
-      return Helper.fail(res, "Square meters is required!");
+    if (!name || !location || !price || !size || !guests || !bedrooms || !bathrooms || !squareMeters || !req.file) {
+      return Helper.fail(res, "All required fields must be filled!");
     }
 
-    // Validate if images were uploaded
-    if (!req.files || req.files.length === 0) {
-      return Helper.fail(res, "At least one image is required!");
-    }
+    // Image handling
+    const images = req.file.filename;
 
-    // Create image paths array from uploaded files
-    const images = req.files.map(file => `/uploads/${file.filename}`);
-
-    // Create villa object
-    let villaObj = {
-      name,
-      location,
-      price,
-      size,
-      guests,
-      bedrooms,
-      bathrooms,
-      squareMeters,
-      checkInTime: checkInTime || "04:00",
-      checkOutTime: checkOutTime || "11:00",
-      images
-    };
-
-    // Check if villa with same name already exists
+    // Check if villa with same name exists
     let villaCheck = await VillaModel.findOne({ name: name });
     if (villaCheck) {
       return Helper.fail(res, "Villa already exists with this name!");
     }
 
-    // Create villa in database
-    let createVilla = await VillaModel.create(villaObj);
-    return Helper.success(res, "Villa added successfully!", createVilla);
+    // Create a Stripe Checkout Session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'payment',
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: name,
+              description: `Villa in ${location} with ${bedrooms} bedrooms and ${bathrooms} bathrooms.`,
+              images: [`${process.env.BACKEND_URL}/uploads/${images}`],
+            },
+            unit_amount: 5000 * 100, // Convert to cents
+          },
+          quantity: 1,
+        },
+      ],
+      success_url: `${process.env.FRONTEND_URL}/payment-success`,
+      cancel_url: `${process.env.FRONTEND_URL}/payment-failure`,
+    });
 
+    return res.json({
+      success: true,
+      checkoutUrl: session.url, // Return the Stripe Checkout URL
+    });
   } catch (error) {
     console.log(error);
     return Helper.fail(res, error.message);
   }
 };
+
+
+
+// Payment success callback
+const paymentSuccess = async (req, res) => {
+  try {
+    const { session_id } = req.query;
+    if (!session_id) {
+      return Helper.fail(res, "Session ID is required!");
+    }
+
+    const session = await stripe.checkout.sessions.retrieve(session_id);
+    if (session.payment_status !== 'paid') {
+      return Helper.fail(res, "Payment not completed!");
+    }
+
+    // Store villa details in the database
+    const villaData = {
+      name: session.metadata.name,
+      location: session.metadata.location,
+      price: session.amount_total / 100, // Convert from cents
+      size: session.metadata.size,
+      guests: session.metadata.guests,
+      bedrooms: session.metadata.bedrooms,
+      bathrooms: session.metadata.bathrooms,
+      squareMeters: session.metadata.squareMeters,
+      checkInTime: session.metadata.checkInTime || "04:00",
+      checkOutTime: session.metadata.checkOutTime || "11:00",
+      images: session.metadata.images
+    };
+
+    const villa = await VillaModel.create(villaData);
+    if (!villa) {
+      return Helper.fail(res, "Villa creation failed!");
+    }
+
+    return res.redirect(`${process.env.FRONTEND_URL}/payment/success`);
+  } catch (error) {
+    console.log(error);
+    return Helper.fail(res, error.message);
+  }
+};
+
+
 
 // Get all villas
 const getAllVillas = async (req, res) => {
@@ -161,7 +186,7 @@ const updateVilla = async (req, res) => {
     if (req.files && req.files.length > 0) {
       // Delete old images from storage (you'll need to implement this)
       // deleteOldImages(existingVilla.images);
-      
+
       // Add new image paths
       updateObj.images = req.files.map(file => `/uploads/${file.filename}`);
     }
@@ -180,24 +205,24 @@ const updateVilla = async (req, res) => {
   }
 };
 //for soft delete villa
-const removeVilla = async (req,res)=>{
-try {
-  const {villaId} = req.body;
-  if(!villaId) return helper.fail(res,"VillaId Is Required");
-  let v = { _id: villaId };
-     let deleted = await VillaModel.findOneAndUpdate(
-       v,
-       { isDeleted: true },
-       { new: true }
-     );
-     if (!deleted) {
-       return Helper.fail(res, "No Villa found!");
-     }
-     return Helper.success(res, " Villa  deleted successfully", deleted);
-} catch (error) {
-  console.error(error);
-  return Helper.fail(res,"Something went Wrong!")
-}
+const removeVilla = async (req, res) => {
+  try {
+    const { villaId } = req.body;
+    if (!villaId) return helper.fail(res, "VillaId Is Required");
+    let v = { _id: villaId };
+    let deleted = await VillaModel.findOneAndUpdate(
+      v,
+      { isDeleted: true },
+      { new: true }
+    );
+    if (!deleted) {
+      return Helper.fail(res, "No Villa found!");
+    }
+    return Helper.success(res, " Villa  deleted successfully", deleted);
+  } catch (error) {
+    console.error(error);
+    return Helper.fail(res, "Something went Wrong!")
+  }
 }
 
 module.exports = {
@@ -205,6 +230,6 @@ module.exports = {
   getAllVillas,
   getVillaById,
   updateVilla,
-  removeVilla
-
+  removeVilla,
+  paymentSuccess
 };

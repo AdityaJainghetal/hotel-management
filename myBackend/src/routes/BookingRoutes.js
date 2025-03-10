@@ -36,5 +36,14 @@ router.get('/bookings', async (req, res) => {
     }
 });
 
+router.get('/locations', async (req, res) => {
+    try {
+        const locations = await VillaModel.distinct('location'); // Fetch all unique locations from the database
+        res.status(200).json(locations); // Return the locations as JSON
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching locations', error });
+    }
+});
+
 
 module.exports = router;

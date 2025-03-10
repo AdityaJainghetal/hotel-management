@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 
 function AddVillas() {
@@ -13,69 +13,41 @@ function AddVillas() {
         squareMeters: '',
         checkInTime: '',
         checkOutTime: '',
-        image: '',
+        image: null,
     });
-    const [categoryData, setCategoryData] = useState([]);
-    const [villasData, setVillasData] = useState([]);
 
     const handleChange = (e) => {
-        setInput({ ...input, [e.target.name]: e.target.value });
-    };
-
-    const fileHandler = (e) => {
-        setInput({ ...input, [e.target.name]: e.target.files[0] });
+        if (e.target.name === 'image') {
+            setInput({ ...input, image: e.target.files[0] });
+        } else {
+            setInput({ ...input, [e.target.name]: e.target.value });
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+    
         let formData = new FormData();
-        formData.append('name', input.name);
-        formData.append('location', input.location);
-        formData.append('price', input.price);
-        formData.append('size', input.size);
-        formData.append('guests', input.guests);
-        formData.append('bedrooms', input.bedrooms);
-        formData.append('bathrooms', input.bathrooms);
-        formData.append('squareMeters', input.squareMeters);
-        formData.append('checkInTime', input.checkInTime);
-        formData.append('checkOutTime', input.checkOutTime);
-        formData.append('image', input.image);
-
+        Object.keys(input).forEach((key) => {
+            formData.append(key, input[key]);
+        });
+    
         try {
-            let res = await axios.post('http://localhost:3400/addvillas', formData);
-            if (res.data.success) {
-                alert('Villa Added Successfully');
+            let res = await axios.post('http://localhost:3400/v1/villa/add', formData);
+            
+            if (res.data.success && res.data.checkoutUrl) {
+                // Open Stripe checkout page
+                window.location.href = res.data.checkoutUrl;
+            } else {
+                alert('Failed to initialize payment.');
             }
         } catch (error) {
             console.error('Error adding villa:', error);
             alert('Failed to add villa. Please try again.');
         }
-
-        setInput({
-            name: '',
-            location: '',
-            price: '',
-            size: '',
-            guests: '',
-            bedrooms: '',
-            bathrooms: '',
-            squareMeters: '',
-            checkInTime: '',
-            checkOutTime: '',
-            image: '',
-        });
     };
-
-    useEffect(() => {
-        axios.get('http://localhost:3400/getAllCategory').then((res) => {
-            setCategoryData(res.data.categoryData);
-        });
-
-        axios.get('http://localhost:3400/getAllVilla').then((res) => {
-            setVillasData(res.data.villasData);
-        });
-    }, []);
+    
+    
 
     return (
         <div className="add-villa p-6 md:p-8 bg-gray-100 min-h-screen flex items-center justify-center">
@@ -139,7 +111,7 @@ function AddVillas() {
                         <input
                             type="file"
                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring focus:ring-blue-300 focus:outline-none"
-                            onChange={fileHandler}
+                            onChange={handleChange}
                             name="image"
                             required
                         />

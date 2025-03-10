@@ -21,6 +21,7 @@ import {
   Legend,
   ArcElement,
 } from "chart.js";
+import { Link } from "react-router-dom";
 
 // Register chart components
 ChartJS.register(
@@ -171,12 +172,36 @@ export default function Dashboard() {
         <div className="p-4">
           <h1 className="text-xl font-bold mb-8">BRESS</h1>
           <nav className="space-y-2">
-            <NavItem icon={<LayoutDashboard size={20} />} label="Dashboard" darkMode={darkMode} />
-            <NavItem icon={<FolderKanban size={20} />} label="Orders" darkMode={darkMode} />
-            <NavItem icon={<ListTodo size={20} />} label="Add Villas" darkMode={darkMode} />
+            <Link to="/dashboard" className="flex items-center p-2 space-x-3 rounded-lg decoration-none cursor-pointer dark:hover:bg-gray-200">
+              <LayoutDashboard size={20} />
+              <span className="flex-1">Dashboard</span>
+            </Link>
+            <Link to="/orders" className="flex items-center p-2 space-x-3 rounded-lg decoration-none cursor-pointer dark:hover:bg-gray-200">
+              <FolderKanban size={20} />
+              <span className="flex-1">Orders</span>
+            </Link>
+            <Link to="/addVillas" className="flex items-center p-2 space-x-3 rounded-lg decoration-none cursor-pointer dark:hover:bg-gray-200">
+              <ListTodo size={20} />
+              <span className="flex-1">Add Villas</span>
+            </Link>
+            <Link to="/settings" className="flex items-center p-2 space-x-3 rounded-lg decoration-none cursor-pointer dark:hover:bg-gray-200">
+              <Wrench size={20} />
+              <span className="flex-1">Settings</span>
+            </Link>
+            <Link to="/notifications" className="flex items-center p-2 space-x-3 rounded-lg decoration-none cursor-pointer dark:hover:bg-gray-200">
+              <Bell size={20} />
+              <span className="flex-1">Notifications</span>
+            </Link>
+            <Link to="/logout" className="flex items-center p-2 space-x-3 rounded-lg decoration-none cursor-pointer dark:hover:bg-gray-200">
+              <MessageSquare size={20} />
+              <span className="flex-1">Logout</span>
+            </Link>
+            {/* <NavItem icon={<LayoutDashboard size={20} />} label="Dashboard" darkMode={darkMode} active />
+            <NavItem icon={<FolderKanban size={20} />} to="/orders" label="Orders" darkMode={darkMode} />
+            <NavItem icon={<ListTodo size={20} />} to="/addVillas" label="Add Villas" darkMode={darkMode} />
             <NavItem icon={<Wrench size={20} />} label="Settings" darkMode={darkMode} />
             <NavItem icon={<Bell size={20} />} label="Notifications" badge="3" darkMode={darkMode} />
-            <NavItem icon={<MessageSquare size={20} />} label="Logout" darkMode={darkMode} />
+            <NavItem icon={<MessageSquare size={20} />} label="Logout" darkMode={darkMode} /> */}
           </nav>
         </div>
 
