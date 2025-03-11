@@ -1,12 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-// Import your images and icons
-import aboutbanner from "../images/aboutpage_banner.png";
-import villaimg1 from "../images/aboutpage_img1.png";
-import villaimg2 from "../images/villaimg2.png";
-import villaimg3 from "../images/villaimg3.png";
-import villaimg4 from "../images/villaimg4.png";
+// Import your images and icons 
 import banner3 from "../images/banner3.png";
 
 import { CiHeart } from "react-icons/ci";
@@ -31,7 +26,7 @@ const BookingForm = () => {
     email: '',
     phone: '',
     checkInDate: '',
-    checkOutDate: ''
+    checkOutDate: '',
   });
 
   const handleChange = (e) => {
@@ -43,48 +38,39 @@ const BookingForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-   
 
     try {
-      const response = await axios.post('http://localhost:3400/api/booking/book-villa', {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        checkInDate: formData.checkInDate,
-        checkOutDate: formData.checkOutDate,
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
+      const res = await axios.post(
+        `http://localhost:3400/api/booking/book-villa`,
+        {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          checkInDate: formData.checkInDate,
+          checkOutDate: formData.checkOutDate,
         },
-      });
-      
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-      console.log('Booking successful:', response.data);
-
-      // Clear the form after successful submission
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        checkInDate: '',
-        checkOutDate: ''
-      });
-
-    } catch (error) {
-      if (error.response) {
-        console.error('Error booking villa:', error.response.data);
+      if (res.data.success && res.data.checkoutUrl) {
+        window.location.href = res.data.checkoutUrl;
       } else {
-        console.error('Error booking villa:', error.message);
+        alert('Failed to initialize payment.');
       }
+    } catch (error) {
+      console.error('Error booking villa:', error.response?.data || error.message);
+      alert('Error booking villa. Please try again.');
     }
   };
 
   return (
-    <div className="flex justify-center items-center-text  bg-gray-800 ">
-      <div className="w-full max-w-md p-3 pr-1 bg-gray-900 shadow-lg rounded-lg">
-        <h2 className="text-3xl font-bold text-center mb-6 text-white">
-          Book Villas
-        </h2>
+    <div className="flex justify-center items-center bg-gray-800">
+      <div className="w-full max-w-md p-3 bg-gray-900 shadow-lg rounded-lg">
+        <h2 className="text-3xl font-bold text-center mb-6 text-white">Book Your Stay</h2>
         <form onSubmit={handleSubmit} className="space-y-5">
           <input
             type="text"
@@ -136,14 +122,15 @@ const BookingForm = () => {
             type="submit"
             className="w-full py-3 bg-blue-500 text-white rounded-md font-semibold hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            Book Villa
+            Book Now
           </button>
         </form>
       </div>
     </div>
-
   );
 };
+
+
 
 
 
@@ -152,7 +139,7 @@ const BookingForm = () => {
 export default function Villas() {
   const { id } = useParams();
   const [villaData, setVillaData] = useState([]);
-  
+
 
   useEffect(() => {
     fetchVillas();

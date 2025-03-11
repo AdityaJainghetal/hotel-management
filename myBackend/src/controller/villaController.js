@@ -1,6 +1,5 @@
 const VillaModel = require("../model/villaModel");
 const Helper = require("../utils/helper");
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const createVilla = async (req, res) => {
   try {
@@ -17,87 +16,42 @@ const createVilla = async (req, res) => {
       checkOutTime
     } = req.body;
 
-    if (!name || !location || !price || !size || !guests || !bedrooms || !bathrooms || !squareMeters || !req.file) {
+    if (!name || !location || !price || !size || !guests || !bedrooms || !bathrooms || !squareMeters || !req.files) {
       return Helper.fail(res, "All required fields must be filled!");
     }
 
     // Image handling
-    const images = req.file.filename;
+    const images = req.files.map(file => `/uploads/${file.filename}`);
+    console.log(images)
+    console.log(req.files)
 
+    if(images.length === 0){
+      return Helper.fail(res, "Images is required!");
+    }
     // Check if villa with same name exists
     let villaCheck = await VillaModel.findOne({ name: name });
     if (villaCheck) {
       return Helper.fail(res, "Villa already exists with this name!");
     }
 
-    // Create a Stripe Checkout Session
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      mode: 'payment',
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: name,
-              description: `Villa in ${location} with ${bedrooms} bedrooms and ${bathrooms} bathrooms.`,
-              images: [`${process.env.BACKEND_URL}/uploads/${images}`],
-            },
-            unit_amount: 5000 * 100, // Convert to cents
-          },
-          quantity: 1,
-        },
-      ],
-      success_url: `${process.env.FRONTEND_URL}/payment-success`,
-      cancel_url: `${process.env.FRONTEND_URL}/payment-failure`,
+    const newVilla = await VillaModel.create({
+      name,
+      location,
+      price,
+      size,
+      guests,
+      bedrooms,
+      bathrooms,
+      squareMeters,
+      checkInTime,
+      checkOutTime,
+      images
     });
 
     return res.json({
       success: true,
-      checkoutUrl: session.url, // Return the Stripe Checkout URL
+      newVilla
     });
-  } catch (error) {
-    console.log(error);
-    return Helper.fail(res, error.message);
-  }
-};
-
-
-
-// Payment success callback
-const paymentSuccess = async (req, res) => {
-  try {
-    const { session_id } = req.query;
-    if (!session_id) {
-      return Helper.fail(res, "Session ID is required!");
-    }
-
-    const session = await stripe.checkout.sessions.retrieve(session_id);
-    if (session.payment_status !== 'paid') {
-      return Helper.fail(res, "Payment not completed!");
-    }
-
-    // Store villa details in the database
-    const villaData = {
-      name: session.metadata.name,
-      location: session.metadata.location,
-      price: session.amount_total / 100, // Convert from cents
-      size: session.metadata.size,
-      guests: session.metadata.guests,
-      bedrooms: session.metadata.bedrooms,
-      bathrooms: session.metadata.bathrooms,
-      squareMeters: session.metadata.squareMeters,
-      checkInTime: session.metadata.checkInTime || "04:00",
-      checkOutTime: session.metadata.checkOutTime || "11:00",
-      images: session.metadata.images
-    };
-
-    const villa = await VillaModel.create(villaData);
-    if (!villa) {
-      return Helper.fail(res, "Villa creation failed!");
-    }
-
-    return res.redirect(`${process.env.FRONTEND_URL}/payment/success`);
   } catch (error) {
     console.log(error);
     return Helper.fail(res, error.message);
@@ -231,5 +185,4 @@ module.exports = {
   getVillaById,
   updateVilla,
   removeVilla,
-  paymentSuccess
 };

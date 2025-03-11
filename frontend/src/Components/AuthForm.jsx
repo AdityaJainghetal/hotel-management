@@ -52,18 +52,18 @@ export default function AuthForm() {
       if (isSignup) {
         const res = await axios.post(`${baseUrl}/user/register`, formData);
         if (res.data.status) {
-          alert(res.data.message);
+          //alert(res.data.message);
           navigate('/login');
         } else {
-          alert(res.data.message);
+          //alert(res.data.message);
         }
       } else {
         const res = await axios.post(`${baseUrl}/user/login`, formData);
         if (res.data.status) {
-          alert('Login successful');
+          //alert('Login successful');
           navigate('/dashboard'); // navigate to dashboard or another page on successful login
         } else {
-          alert(res.data.message);
+          //alert(res.data.message);
         }
       }
     }

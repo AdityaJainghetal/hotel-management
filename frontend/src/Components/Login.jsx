@@ -44,10 +44,10 @@ export default function Login() {
     if (validateForm()) {
       const res = await axios.post(`${baseUrl}/user/login`, formData);
       if (res.data.status) {
-        alert(res.data.message);
+        //alert(res.data.message);
         navigate('/villas');
       } else {
-        alert(res.data.message);
+        //alert(res.data.message);
       }
     }
   };

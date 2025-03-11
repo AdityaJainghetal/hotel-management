@@ -214,10 +214,10 @@ export default function Signup() {
     if (validateForm()) {
       const res = await axios.post(`${baseUrl}/user/register`, formData);
       if (res.data.status) {
-        alert(res.data.message);
+        //alert(res.data.message);
         navigate('/login');
       } else {
-        alert(res.data.message);
+        //alert(res.data.message);
       }
     }
   };

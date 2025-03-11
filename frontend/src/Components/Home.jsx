@@ -55,16 +55,16 @@ const Home = () => {
     try {
       const res = await axios.get(`${baseUrl}/villa/getAll`);
       if (res.data.status) {
-        alert(res.data.message);
+        //alert(res.data.message);
         setVillaData(res.data.data);
         // const data = []; // Replace this with actual data
         // setVillaData(data);
       } else {
-        alert(res.data.message);
+        //alert(res.data.message);
       }
     } catch (error) {
       console.error("Error fetching villas:", error);
-      alert("Error fetching villas");
+      //alert("Error fetching villas");
     }
   };
   console.log(villaData, "data")
